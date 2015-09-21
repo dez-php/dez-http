@@ -26,9 +26,14 @@
         protected $code       = 200;
 
         /**
-         * @var \Dez\Http\Response\Headers
+         * @var \Dez\Http\Response\HeadersInterface
          */
         protected $headers    = null;
+
+        /**
+         * @var \Dez\Http\CookiesInterface
+         */
+        protected $cookies    = null;
 
         /**
          * @var null
@@ -94,6 +99,21 @@
             return $this;
         }
 
+        /**
+         * @return CookiesInterface
+         */
+        public function getCookies() {
+            return $this->cookies;
+        }
+
+        /**
+         * @param CookiesInterface $cookies
+         * @return static
+         */
+        public function setCookies( CookiesInterface $cookies ) {
+            $this->cookies = $cookies;
+            return $this;
+        }
 
         public function getBody() {
             return $this->body;
@@ -116,11 +136,11 @@
             $this->sendBody();
         }
 
-        protected function sendHeaders() {
+        public function sendHeaders() {
 
         }
 
-        protected function sendBody() {
+        public function sendBody() {
             print $this->getBody();
         }
 
