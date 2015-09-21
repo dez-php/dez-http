@@ -1,2 +1,2 @@
 # dez-http
-DezPHP - HTTP Component
+Http Component
