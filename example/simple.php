@@ -4,4 +4,4 @@
 
     $request = new \Dez\Http\Request();
 
-    die(var_dump( $request ));
+    die(var_dump( $request->getRawBody() ));
