@@ -20,6 +20,15 @@
         protected $cookies  = [];
 
         /**
+         * Constructor
+        */
+        public function __construct() {
+            if( count( $_COOKIE ) ) foreach( $_COOKIE as $name => $value ) {
+                $this->addCookie( $name, new Cookie( $name, $value ) );
+            }
+        }
+
+        /**
          * @return ContainerInterface
          */
         public function getDi() {
@@ -40,12 +49,12 @@
          * @param $value
          * @param int $expired
          * @param string $path
-         * @param null $domain
-         * @param null $secure
-         * @param null $httpOnly
+         * @param null|string $domain
+         * @param null|bool $secure
+         * @param null|bool $httpOnly
          * @return $this
          */
-        public function set( $name, $value, $expired = 0, $path = '/', $domain = null, $secure = null, $httpOnly = null ) {
+        public function set( $name, $value = '', $expired = 0, $path = '/', $domain = '', $secure = false, $httpOnly = false ) {
             $this->addCookie( $name, new Cookie( $name, $value, $expired, $path, $domain, $secure, $httpOnly ) );
             return $this;
         }

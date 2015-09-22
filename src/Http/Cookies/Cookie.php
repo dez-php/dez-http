@@ -2,7 +2,15 @@
 
     namespace Dez\Http\Cookies;
 
-    class Cookie implements CookieInterface {
+    use Dez\DependencyInjection\ContainerInterface;
+    use Dez\DependencyInjection\InjectableInterface;
+    use Dez\Http\Exception;
+    use Dez\Http\Response;
+    use Dez\Http\ResponseInterface;
+
+    class Cookie implements InjectableInterface, CookieInterface {
+
+        protected $di;
 
         protected $name     = '';
 
@@ -18,15 +26,41 @@
 
         protected $httpOnly = false;
 
-        public function __construct( $name, $value = null, $expired = 0, $path = '/', $domain = null, $secure = null, $httpOnly = null ) {
-            $this->setName( $name );
-            $this->setValue( $value );
-            $this->setExpired( $expired );
-            $this->setPath( $path );
-            $this->setDomain( $domain );
-            $this->setSecure( $secure );
-            $this->setHttpOnly( $httpOnly );
+        public function __construct( $name, $value = '', $expired = 0, $path = '/', $domain = '', $secure = false, $httpOnly = false ) {
+            $this->setName( $name )->setValue( $value )->setExpired( $expired )
+                ->setPath( $path )->setDomain( $domain )
+                ->setSecure( $secure )->setHttpOnly( $httpOnly );
         }
+
+        public function send() {
+
+            $dependencyInjector     = $this->getDi();
+            if( ! $dependencyInjector || ! ( $dependencyInjector instanceof ContainerInterface ) ) {
+                throw new Exception( 'DependencyInjector require for cookie for response service' );
+            }
+            /** @var Response $response */
+            $response       = $dependencyInjector->get( 'response' );
+            $response->getHeaders()->set( 'cookie', 'asd=asd', false );
+
+        }
+
+        /**
+         * @return ContainerInterface
+         */
+        public function getDi() {
+            return $this->di;
+        }
+
+        /**
+         * @param ContainerInterface $di
+         * @return static
+         */
+        public function setDi( ContainerInterface $di ) {
+            $this->di = $di;
+            return $this;
+        }
+
+
 
         /**
          * @return string
