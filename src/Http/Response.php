@@ -2,18 +2,25 @@
 
     namespace Dez\Http;
 
+    use Dez\DependencyInjection\ContainerInterface;
+    use Dez\DependencyInjection\InjectableInterface;
     use Dez\Http\Response\Format\ApiJson;
     use Dez\Http\Response\Format\Html;
     use Dez\Http\Response\Format\Json;
     use Dez\Http\Response\Headers;
 
-    class Response {
+    class Response implements InjectableInterface, ResponseInterface {
 
         const RESPONSE_JSON       = 'json';
 
         const RESPONSE_HTML       = 'html';
 
         const RESPONSE_API_JSON   = 'api_json';
+
+        /**
+         * @var ContainerInterface
+         */
+        protected $di;
 
         /**
          * @var string
@@ -42,6 +49,22 @@
 
         public function __construct() {
             $this->setHeaders( new Headers() );
+        }
+
+        /**
+         * @return ContainerInterface
+         */
+        public function getDi() {
+            return $this->di;
+        }
+
+        /**
+         * @param mixed $di
+         * @return static
+         */
+        public function setDi( ContainerInterface $di ) {
+            $this->di = $di;
+            return $this;
         }
 
         public function setFormat( $format = self::RESPONSE_HTML ) {
