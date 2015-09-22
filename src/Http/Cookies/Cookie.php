@@ -18,6 +18,16 @@
 
         protected $httpOnly = false;
 
+        public function __construct( $name, $value = null, $expired = 0, $path = '/', $domain = null, $secure = null, $httpOnly = null ) {
+            $this->setName( $name );
+            $this->setValue( $value );
+            $this->setExpired( $expired );
+            $this->setPath( $path );
+            $this->setDomain( $domain );
+            $this->setSecure( $secure );
+            $this->setHttpOnly( $httpOnly );
+        }
+
         /**
          * @return string
          */
@@ -38,6 +48,11 @@
          * @return string
          */
         public function getValue() {
+
+            if( isset( $_COOKIE[ $this->getName() ] ) ) {
+                $this->setValue( $_COOKIE[ $this->getName() ] );
+            }
+
             return $this->value;
         }
 
@@ -62,8 +77,7 @@
          * @return static
          */
         public function setExpired( $expired ) {
-            $date       = new \DateTime( $expired );
-            $this->expired = $date->format( 'D, d-M-Y H:i:s GMT' );
+            $this->expired = date( 'D, d-M-Y H:i:s', $expired ) . ' GMT';
             return $this;
         }
 
