@@ -46,11 +46,18 @@
          */
         protected $headers    = null;
 
+
         /**
-         *
+         * @param null $content
+         * @param int $statusCode
+         * @param null $statusMessage
          */
-        public function __construct() {
+        public function __construct( $content = null, $statusCode = 200, $statusMessage = null ) {
             $this->setHeaders( new Headers() );
+
+            if( $content !== null ) {
+                $this->setContent( $content )->setStatusCode( $statusCode, $statusMessage );
+            }
         }
 
         /**
@@ -284,7 +291,7 @@
 
         /**
          * @param int $statusCode
-         * @return mixed
+         * @return string
          * @throws Exception
          */
         public function getStatusMessage( $statusCode = 0 ) {
