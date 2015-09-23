@@ -6,12 +6,21 @@
      * Class Headers
      * @package Dez\Http\Response
      */
+    /**
+     * Class Headers
+     * @package Dez\Http\Response
+     */
     class Headers implements HeadersInterface {
 
         /**
          * @var array
          */
-        protected $headers  = [];
+        protected $headers      = [];
+
+        /**
+         * @var array
+         */
+        protected $rawHeaders  = [];
 
         /**
          * @param $name
@@ -44,6 +53,15 @@
         }
 
         /**
+         * @param $header
+         * @return $this
+         */
+        public function setRaw( $header ) {
+            $this->rawHeaders[]     = $header;
+            return $this;
+        }
+
+        /**
          * @param null $name
          * @return $this
          */
@@ -57,9 +75,21 @@
         }
 
         /**
-         *
+         * @return $this
          */
         public function send() {
+
+            foreach( $this->rawHeaders as $header ) {
+                header( $header );
+            }
+
+            foreach( $this->headers as $name => $headers ) {
+                foreach( $headers as $header ) {
+                    header( "$name: $header" );
+                }
+            }
+
+            return $this;
 
         }
 

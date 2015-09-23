@@ -8,7 +8,9 @@
 
         public function get( $name );
 
-        public function set( $name, $value );
+        public function set( $name, $value, $replace );
+
+        public function setRaw( $header );
 
         public function reset();
 

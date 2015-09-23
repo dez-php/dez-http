@@ -1,34 +1,19 @@
 <?php
 
-    include_once '../vendor/autoload.php';
+error_reporting(1);
+ini_set('display_errors', 1);
 
-    $cookies    = new \Dez\Http\Cookies();
+include_once '../vendor/autoload.php';
+
+$container  = new \Dez\DependencyInjection\Container();
+
+$container->set( 'response', new \Dez\Http\Response() );
+$container->set( 'cookies', new \Dez\Http\Cookies() );
+
+$cookies    = $container->get( 'cookies' );
 
 $cookies->set( 'test', 'value', time() + 123123123 );
 
-    $cookies->get( 'privatly_auth' )->getValue();
-    $cookies->get( 'PHPSESSID' )->getValue();
-    $cookies->get( 'csrf_token' )->getValue();
-
 die(var_dump(
-    $cookies,
-    $cookies->get( 'privatly_auth' ),
-    $cookies->get( 'PHPSESSID' ),
-    $cookies->get( 'csrf_token' )
+    $container->get( 'response' )
 ));
-
-
-/*    $request = new \Dez\Http\Request();
-
-    die(var_dump(
-        $request,
-        $request->getClientIP(),
-        $request->getRealClientIP(),
-        $request->getSchema(),
-        $request->getServerIP(),
-        $request->isGet(),
-        $request->requestMethod(),
-        $request->getUserAgent(),
-        $request->getQuery( 'var1' ),
-        $request->getQuery()
-    ));*/

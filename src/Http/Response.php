@@ -9,6 +9,10 @@
     use Dez\Http\Response\Format\Json;
     use Dez\Http\Response\Headers;
 
+    /**
+     * Class Response
+     * @package Dez\Http
+     */
     class Response implements InjectableInterface, ResponseInterface {
 
         const RESPONSE_JSON       = 'json';
@@ -25,12 +29,17 @@
         /**
          * @var string
          */
-        protected $format     = self::RESPONSE_HTML;
+        protected $bodyFormat   = self::RESPONSE_HTML;
 
         /**
          * @var int
          */
-        protected $code       = 200;
+        protected $statusCode   = 200;
+
+        /**
+         * @var null
+         */
+        protected $content      = null;
 
         /**
          * @var \Dez\Http\Response\HeadersInterface
@@ -38,15 +47,8 @@
         protected $headers    = null;
 
         /**
-         * @var \Dez\Http\CookiesInterface
+         *
          */
-        protected $cookies    = null;
-
-        /**
-         * @var null
-         */
-        protected $body       = null;
-
         public function __construct() {
             $this->setHeaders( new Headers() );
         }
@@ -67,41 +69,132 @@
             return $this;
         }
 
-        public function setFormat( $format = self::RESPONSE_HTML ) {
-            if( ! in_array( strtolower( $format ), [ self::RESPONSE_HTML, self::RESPONSE_JSON, self::RESPONSE_API_JSON ] ) ) {
-                throw new Exception( 'Setting bad response format' );
+        /**
+         * @return string
+         */
+        public function getBodyFormat() {
+            return $this->bodyFormat;
+        }
+
+        /**
+         * @param string $bodyFormat
+         * @return static
+         */
+        public function setBodyFormat( $bodyFormat ) {
+            $this->bodyFormat = $bodyFormat;
+            return $this;
+        }
+
+        /**
+         * @return int
+         */
+        public function getStatusCode() {
+            return $this->statusCode;
+        }
+
+        /**
+         * @param $statusCode
+         * @param null $statusMessage
+         * @return $this
+         * @throws Exception
+         */
+        public function setStatusCode( $statusCode, $statusMessage = null )  {
+
+            if( $statusMessage === null ) {
+                $statusMessage  = $this->getStatusMessage( $statusCode );
             }
-            $this->format = $format;
+
+            $this->setRawHeader( "HTTP/1.1 $statusCode $statusMessage" );
+            $this->setHeader( 'Status', "$statusCode $statusMessage" );
+
+            $this->statusCode = $statusCode;
+
             return $this;
         }
 
-        public function getFormat() {
-            return $this->format;
+        /**
+         * @param string $url
+         */
+        public function redirect( $url = '/' ) {
+            $this->setStatusCode( 302 );
+            $this->getHeaders()->set( 'Location', $url );
         }
 
-        public function setCode( $code = 200 ) {
-            $this->code = (int) $code;
+        /**
+         * @return null
+         */
+        public function getContent() {
+            return $this->content;
+        }
+
+        /**
+         * @param null $content
+         * @return static
+         */
+        public function setContent( $content ) {
+            $this->content = $content;
             return $this;
         }
 
-        public function getCode() {
-            return;
+        /**
+         * @param null $content
+         * @return static
+         */
+        public function appentContent( $content ) {
+            $this->content = $this->getContent() . $content;
+            return $this;
         }
 
+        /**
+         * @param null $content
+         * @return static
+         */
+        public function prependContent( $content ) {
+            $this->content = $content . $this->getContent();
+            return $this;
+        }
+
+        /**
+         * @param $header
+         * @return $this
+         */
+        public function setRawHeader( $header ) {
+            $this->headers->setRaw( $header );
+            return $this;
+        }
+
+        /**
+         * @param string $name
+         * @param $value
+         * @return $this
+         */
         public function setHeader( $name = '', $value ) {
             $this->headers->set( $name, $value, true );
             return $this;
         }
 
+        /**
+         * @param string $name
+         * @param $value
+         * @return $this
+         */
         public function addHeader( $name = '', $value ) {
             $this->headers->set( $name, $value, false );
             return $this;
         }
 
+        /**
+         * @param $name
+         * @return mixed
+         */
         public function hasHeader( $name ) {
             return $this->headers->has( $name );
         }
 
+        /**
+         * @param $name
+         * @return mixed
+         */
         public function getHeader( $name ) {
             return $this->headers->get( $name );
         }
@@ -123,48 +216,145 @@
         }
 
         /**
-         * @return CookiesInterface
+         * @return $this
          */
-        public function getCookies() {
-            return $this->cookies;
-        }
-
-        /**
-         * @param CookiesInterface $cookies
-         * @return static
-         */
-        public function setCookies( CookiesInterface $cookies ) {
-            $this->cookies = $cookies;
+        public function resetHeaders() {
+            $this->getHeaders()->reset();
             return $this;
         }
 
-        public function getBody() {
-            return $this->body;
+        /**
+         * @return $this
+         */
+        public function sendHeaders() {
+            $this->getHeaders()->send();
+            return $this;
         }
 
-        public function send() {
-            if( $this->getFormat() == self::RESPONSE_HTML ) {
-                $formatter = new Html( $this );
-            } else if( $this->getFormat() == self::RESPONSE_JSON ) {
-                $formatter = new Json( $this );
-            } else if( $this->getFormat() == self::RESPONSE_API_JSON ) {
-                $formatter = new ApiJson( $this );
+        /**
+         * @return $this
+         * @throws Exception
+         */
+        public function sendCookies() {
+
+            $container  = $this->getDi();
+            if( ! $container || ! ( $container instanceof ContainerInterface ) ) {
+                throw new Exception( 'DependencyInjection require for response service' );
+            }
+
+            /** @var $cookies CookiesInterface */
+            $cookies    = $container->get( 'cookies' );
+            if( ! $cookies || ! ( $cookies instanceof CookiesInterface ) ) {
+                throw new Exception( 'Cookies service is not registered in DependencyInjection' );
+            }
+
+            $cookies->send();
+
+            return $this;
+        }
+
+        /**
+         * @throws Exception
+         */
+        public function sendContent() {
+
+            if( $this->getBodyFormat() === Response::RESPONSE_HTML ) {
+                $formatter  = new Html( $this );
+            } else if( $this->getBodyFormat() === Response::RESPONSE_JSON ) {
+                $formatter  = new Json( $this );
+            } else if( $this->getBodyFormat() === Response::RESPONSE_API_JSON ) {
+                $formatter  = new ApiJson( $this );
             } else {
-                throw new Exception( 'Response cannot be possible because have bad format' );
+                throw new Exception( 'Bad setting body-format for response content' );
             }
 
             $formatter->process();
 
-            $this->sendHeaders();
-            $this->sendBody();
+            echo $this->getContent();
         }
 
-        public function sendHeaders() {
-
+        /**
+         * @return $this
+         * @throws Exception
+         */
+        public function send() {
+            $this->sendHeaders()->sendCookies()->sendContent();
+            return $this;
         }
 
-        public function sendBody() {
-            print $this->getBody();
+        /**
+         * @param int $statusCode
+         * @return mixed
+         * @throws Exception
+         */
+        public function getStatusMessage( $statusCode = 0 ) {
+
+            $statusCodes    = [
+                100 => "Continue",
+                101 => "Switching Protocols",
+                102 => "Processing",
+                200 => "OK",
+                201 => "Created",
+                202 => "Accepted",
+                203 => "Non-Authoritative Information",
+                204 => "No Content",
+                205 => "Reset Content",
+                206 => "Partial Content",
+                207 => "Multi-status",
+                208 => "Already Reported",
+                300 => "Multiple Choices",
+                301 => "Moved Permanently",
+                302 => "Found",
+                303 => "See Other",
+                304 => "Not Modified",
+                305 => "Use Proxy",
+                306 => "Switch Proxy",
+                307 => "Temporary Redirect",
+                400 => "Bad Request",
+                401 => "Unauthorized",
+                402 => "Payment Required",
+                403 => "Forbidden",
+                404 => "Not Found",
+                405 => "Method Not Allowed",
+                406 => "Not Acceptable",
+                407 => "Proxy Authentication Required",
+                408 => "Request Time-out",
+                409 => "Conflict",
+                410 => "Gone",
+                411 => "Length Required",
+                412 => "Precondition Failed",
+                413 => "Request Entity Too Large",
+                414 => "Request-URI Too Large",
+                415 => "Unsupported Media Type",
+                416 => "Requested range not satisfiable",
+                417 => "Expectation Failed",
+                418 => "I'm a teapot",
+                422 => "Unprocessable Entity",
+                423 => "Locked",
+                424 => "Failed Dependency",
+                425 => "Unordered Collection",
+                426 => "Upgrade Required",
+                428 => "Precondition Required",
+                429 => "Too Many Requests",
+                431 => "Request Header Fields Too Large",
+                500 => "Internal Server Error",
+                501 => "Not Implemented",
+                502 => "Bad Gateway",
+                503 => "Service Unavailable",
+                504 => "Gateway Time-out",
+                505 => "HTTP Version not supported",
+                506 => "Variant Also Negotiates",
+                507 => "Insufficient Storage",
+                508 => "Loop Detected",
+                511 => "Network Authentication Required",
+            ];
+
+            if( ! isset( $statusCodes[ $statusCode ] ) ) {
+                throw new Exception( "The incorrect status code. In this code [$statusCode] there is no message" );
+            }
+
+            return $statusCodes[ $statusCode ];
+
         }
 
     }

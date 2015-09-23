@@ -6,6 +6,10 @@
     use Dez\DependencyInjection\InjectableInterface;
     use Dez\Http\Cookies\Cookie;
 
+    /**
+     * Class Cookies
+     * @package Dez\Http
+     */
     class Cookies implements InjectableInterface, CookiesInterface {
 
 
@@ -15,18 +19,14 @@
         protected $di;
 
         /**
-         * @var array
+         * @var \Dez\Http\Cookies\Cookie[]
          */
         protected $cookies  = [];
 
         /**
          * Constructor
         */
-        public function __construct() {
-            if( count( $_COOKIE ) ) foreach( $_COOKIE as $name => $value ) {
-                $this->addCookie( $name, new Cookie( $name, $value ) );
-            }
-        }
+        public function __construct() { }
 
         /**
          * @return ContainerInterface
@@ -55,7 +55,19 @@
          * @return $this
          */
         public function set( $name, $value = '', $expired = 0, $path = '/', $domain = '', $secure = false, $httpOnly = false ) {
-            $this->addCookie( $name, new Cookie( $name, $value, $expired, $path, $domain, $secure, $httpOnly ) );
+
+            if( $this->has( $name ) ) {
+                $cookie     = $this->get( $name );
+
+                $cookie
+                    ->setValue( $value )->setExpired( $expired )
+                    ->setPath( $path )->setDomain( $domain )
+                    ->setSecure( $secure )->setHttpOnly( $httpOnly );
+
+            } else {
+                $this->cookies[ $name ] = new Cookie( $name, $value, $expired, $path, $domain, $secure, $httpOnly );
+            }
+
             return $this;
         }
 
@@ -66,11 +78,11 @@
         public function get( $name ) {
 
             if( $this->has( $name ) ) {
-                $cookie     = $this->cookies[ $name ];
-            } else {
-                $cookie     = new Cookie( $name );
-                $this->addCookie( $name, $cookie );
+                return $this->cookies[ $name ];
             }
+
+            $cookie     = new Cookie( $name );
+            $this->cookies[ $name ] = $cookie;
 
             return $cookie;
         }
@@ -96,32 +108,20 @@
             return $this;
         }
 
+
         /**
-         * @param $name
-         * @param Cookie $cookie
          * @return $this
          */
-        public function addCookie( $name, Cookie $cookie ) {
-            $this->cookies[ $name ]    = $cookie;
+        public function send() {
+
+            if( ! headers_sent() ) {
+                foreach( $this->cookies as $cookie ) {
+                    $cookie->send();
+                }
+            }
+
             return $this;
+
         }
-
-        /**
-         * @return \Dez\Http\Cookies\Cookie[]
-         */
-        public function getCookies() {
-            return $this->cookies;
-        }
-
-        /**
-         * @param \Dez\Http\Cookies\Cookie[] $cookies
-         * @return static
-         */
-        public function setCookies( $cookies ) {
-            $this->cookies = $cookies;
-            return $this;
-        }
-
-
 
     }

@@ -4,44 +4,72 @@
 
     use Dez\DependencyInjection\ContainerInterface;
     use Dez\DependencyInjection\InjectableInterface;
-    use Dez\Http\Exception;
     use Dez\Http\Response;
-    use Dez\Http\ResponseInterface;
 
+    /**
+     * Class Cookie
+     * @package Dez\Http\Cookies
+     */
     class Cookie implements InjectableInterface, CookieInterface {
 
+        /**
+         * @var \Dez\DependencyInjection\ContainerInterface
+         */
         protected $di;
 
+        /**
+         * @var bool
+         */
+        protected $sent     = false;
+
+        /**
+         * @var string
+         */
         protected $name     = '';
 
+        /**
+         * @var string
+         */
         protected $value    = '';
 
+        /**
+         * @var string
+         */
         protected $expired  = '';
 
+        /**
+         * @var string
+         */
         protected $path     = '/';
 
+        /**
+         * @var string
+         */
         protected $domain   = '';
 
+        /**
+         * @var bool
+         */
         protected $secure   = false;
 
+        /**
+         * @var bool
+         */
         protected $httpOnly = false;
 
+        /**
+         * @param $name
+         * @param string $value
+         * @param int $expired
+         * @param string $path
+         * @param string $domain
+         * @param bool|false $secure
+         * @param bool|false $httpOnly
+         */
         public function __construct( $name, $value = '', $expired = 0, $path = '/', $domain = '', $secure = false, $httpOnly = false ) {
             $this->setName( $name )->setValue( $value )->setExpired( $expired )
                 ->setPath( $path )->setDomain( $domain )
                 ->setSecure( $secure )->setHttpOnly( $httpOnly );
-        }
-
-        public function send() {
-
-            $dependencyInjector     = $this->getDi();
-            if( ! $dependencyInjector || ! ( $dependencyInjector instanceof ContainerInterface ) ) {
-                throw new Exception( 'DependencyInjector require for cookie for response service' );
-            }
-            /** @var Response $response */
-            $response       = $dependencyInjector->get( 'response' );
-            $response->getHeaders()->set( 'cookie', 'asd=asd', false );
-
         }
 
         /**
@@ -60,7 +88,21 @@
             return $this;
         }
 
+        /**
+         * @return boolean
+         */
+        public function isSent() {
+            return $this->sent;
+        }
 
+        /**
+         * @param boolean $sent
+         * @return static
+         */
+        public function setSent( $sent ) {
+            $this->sent = $sent;
+            return $this;
+        }
 
         /**
          * @return string
@@ -177,6 +219,52 @@
         public function setHttpOnly( $httpOnly ) {
             $this->httpOnly = $httpOnly;
             return $this;
+        }
+
+        /**
+         * @return $this
+         */
+        public function delete() {
+
+            setcookie(
+                $this->getName(),
+                null,
+                time() - 86400,
+                $this->getPath(),
+                $this->getDomain(),
+                $this->isSecure(),
+                $this->isHttpOnly()
+            );
+
+            $this->setValue( null );
+
+            return $this;
+
+        }
+
+        /**
+         * @return $this
+         */
+        public function send() {
+
+            if( ! $this->isSent() ) {
+
+                setcookie(
+                    $this->getName(),
+                    $this->getValue(),
+                    strtotime( $this->getExpired() ),
+                    $this->getPath(),
+                    $this->getDomain(),
+                    $this->isSecure(),
+                    $this->isHttpOnly()
+                );
+
+                $this->setSent( true );
+
+            }
+
+            return $this;
+
         }
 
         /**

@@ -10,4 +10,8 @@
 
         public function has( $name );
 
+        public function delete( $name );
+
+        public function send();
+
     }
