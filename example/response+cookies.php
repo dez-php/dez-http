@@ -37,3 +37,7 @@ $response->setContent( '<h1>Hello world!</h1>' );
 $response->send();
 
 ( new \Dez\Http\Response( '<h2>Page not found!</h2>', 401 ) )->sendHeaders()->sendContent();
+
+// for for response add manually Di Container
+$cookies->set( 'randomCookie_'.rand(), '1', time() + 365 * 86400 );
+( new \Dez\Http\Response( '<h3>Full response!</h3>', 401 ) )->setDi( $container )->send();
