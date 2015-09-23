@@ -54,7 +54,7 @@
          */
         public function __construct( $content = null, $statusCode = 200, $statusMessage = null ) {
             $this->setHeaders( new Headers() );
-
+            $this->setHeader( 'X-Service-Powered', 'HTTP Service v1.0, dez-php' );
             if( $content !== null ) {
                 $this->setContent( $content )->setStatusCode( $statusCode, $statusMessage );
             }

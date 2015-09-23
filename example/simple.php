@@ -14,6 +14,8 @@ $cookies    = $container->get( 'cookies' );
 
 $cookies->set( 'test', 'value', time() + 123123123 );
 
+$container->get( 'response' )->send();
+
 die(var_dump(
     $container->get( 'response' )
 ));
