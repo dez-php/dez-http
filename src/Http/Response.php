@@ -121,10 +121,12 @@
 
         /**
          * @param string $url
+         * @return $this
          */
         public function redirect( $url = '/' ) {
             $this->setStatusCode( 302 );
             $this->getHeaders()->set( 'Location', $url );
+            return $this;
         }
 
         /**
