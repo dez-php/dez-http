@@ -84,7 +84,8 @@
          * @return mixed
          */
         public function getServer( $key = null, $default = null ) {
-            return $this->getFromArray( $_SERVER, strtoupper( $key ), $default );
+            $key    = $key !== null ? strtoupper( $key ) : null;
+            return $this->getFromArray( $_SERVER, $key, $default );
         }
 
         /**
