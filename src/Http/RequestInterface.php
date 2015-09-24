@@ -1,9 +1,8 @@
 <?php
 
-    namespace Dez\Http\Request;
+    namespace Dez\Http;
 
     interface RequestInterface {
-
 
         public function requestMethod();
 

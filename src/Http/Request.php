@@ -2,8 +2,6 @@
 
     namespace Dez\Http;
 
-    use Dez\Http\Request\RequestInterface;
-
     /**
      * Class Request
      * @package Dez\Http
