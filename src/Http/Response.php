@@ -263,9 +263,17 @@
         }
 
         /**
-         * @throws Exception
+         * @return $this
          */
         public function sendContent() {
+            echo $this->getContent();
+            return $this;
+        }
+
+        /**
+         * @throws Exception
+         */
+        public function handlerContent() {
 
             if( $this->getBodyFormat() === Response::RESPONSE_HTML ) {
                 $formatter  = new Html( $this );
@@ -279,7 +287,7 @@
 
             $formatter->process();
 
-            echo $this->getContent();
+            return $this;
         }
 
         /**
@@ -287,7 +295,7 @@
          * @throws Exception
          */
         public function send() {
-            $this->sendHeaders()->sendCookies()->sendContent();
+            $this->handlerContent()->sendHeaders()->sendCookies()->sendContent();
             return $this;
         }
 
