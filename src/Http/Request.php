@@ -17,6 +17,42 @@
 
         /**
          * @param $key
+         * @param $value
+         * @return bool
+         */
+        public function equal( $key, $value ) {
+            return $this->has( $key ) && $this->get( $key ) === $value;
+        }
+
+        /**
+         * @param $key
+         * @param $value
+         * @return bool
+         */
+        public function equalQuery( $key, $value ) {
+            return $this->hasQuery( $key ) && $this->getQuery( $key ) === $value;
+        }
+
+        /**
+         * @param $key
+         * @param $value
+         * @return bool
+         */
+        public function equalPost( $key, $value ) {
+            return $this->hasPost( $key ) && $this->getPost( $key ) === $value;
+        }
+
+        /**
+         * @param $key
+         * @param $value
+         * @return bool
+         */
+        public function equalServer( $key, $value ) {
+            return $this->hasServer( $key ) && $this->getServer( $key ) === $value;
+        }
+
+        /**
+         * @param $key
          * @return bool
          */
         public function has( $key ) {
@@ -37,6 +73,15 @@
          */
         public function hasPost( $key ) {
             return isset( $_POST[ $key ] );
+        }
+
+        /**
+         * @param $key
+         * @return bool
+         */
+        public function hasServer( $key ) {
+            $key    = $key !== null ? strtoupper( $key ) : null;
+            return isset( $_SERVER[ $key ] );
         }
 
         /**
