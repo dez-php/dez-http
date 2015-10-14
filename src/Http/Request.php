@@ -183,6 +183,13 @@
         }
 
         /**
+         * @return string
+         */
+        public function getHost() {
+            return $this->getServerHttp( 'host', '127.0.0.1' );
+        }
+
+        /**
          * @param array $source
          * @param $key
          * @param mixed $default
