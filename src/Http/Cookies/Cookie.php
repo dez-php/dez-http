@@ -125,7 +125,7 @@
          */
         public function getValue() {
 
-            if( isset( $_COOKIE[ $this->getName() ] ) ) {
+            if( ! $this->value && isset( $_COOKIE[ $this->getName() ] ) ) {
                 $this->setValue( $_COOKIE[ $this->getName() ] );
             }
 

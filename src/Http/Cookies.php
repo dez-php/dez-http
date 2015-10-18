@@ -55,27 +55,16 @@
          * @return $this
          */
         public function set( $name, $value = '', $expired = 0, $path = '/', $domain = '', $secure = false, $httpOnly = false ) {
-
-            if( $this->has( $name ) ) {
-                $cookie     = $this->get( $name );
-
-                $cookie
-                    ->setValue( $value )->setExpired( $expired )
-                    ->setPath( $path )->setDomain( $domain )
-                    ->setSecure( $secure )->setHttpOnly( $httpOnly );
-
-            } else {
-                $this->cookies[ $name ] = new Cookie( $name, $value, $expired, $path, $domain, $secure, $httpOnly );
-            }
-
+            $this->cookies[ $name ] = new Cookie( $name, $value, $expired, $path, $domain, $secure, $httpOnly );
             return $this;
         }
 
         /**
          * @param $name string
+         * @param $default string
          * @return Cookie
          */
-        public function get( $name ) {
+        public function get( $name, $default = '' ) {
 
             if( $this->has( $name ) ) {
                 return $this->cookies[ $name ];
@@ -92,7 +81,7 @@
          * @return bool
          */
         public function has( $name ) {
-            return isset( $this->cookies[ $name ] );
+            return isset( $this->cookies[ $name ], $_COOKIE[ $name ] );
         }
 
         /**
