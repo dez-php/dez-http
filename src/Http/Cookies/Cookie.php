@@ -247,12 +247,14 @@
          */
         public function send() {
 
-            if( ! $this->isSent() ) {
+            $expire     = strtotime( $this->getExpired() );
+
+            if( ! $this->isSent() && $expire > time() ) {
 
                 setcookie(
                     $this->getName(),
                     $this->getValue(),
-                    strtotime( $this->getExpired() ),
+                    $expire,
                     $this->getPath(),
                     $this->getDomain(),
                     $this->isSecure(),
