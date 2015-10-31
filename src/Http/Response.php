@@ -44,7 +44,12 @@
         /**
          * @var \Dez\Http\Response\HeadersInterface
          */
-        protected $headers    = null;
+        protected $headers      = null;
+
+        /**
+         * @var bool
+         */
+        protected $enableBody   = true;
 
 
         /**
@@ -237,6 +242,22 @@
          */
         public function sendHeaders() {
             $this->getHeaders()->send();
+            return $this;
+        }
+
+        /**
+         * @return boolean
+         */
+        public function isEnableBody() {
+            return $this->enableBody;
+        }
+
+        /**
+         * @param boolean $enableBody
+         * @return $this
+         */
+        public function setEnableBody( $enableBody ) {
+            $this->enableBody = $enableBody;
             return $this;
         }
 
