@@ -1,35 +1,67 @@
 <?php
 
-    namespace Dez\Http\Response\Format;
+namespace Dez\Http\Response\Format;
 
-    use Dez\Http\Response\Format;
+use Dez\Http\Response\Format;
+
+/**
+ * Class ApiJson
+ * @package Dez\Http\Response\Format
+ */
+class ApiJson extends Format
+{
 
     /**
-     * Class ApiJson
-     * @package Dez\Http\Response\Format
+     * @return \Dez\Http\Response
      */
-    class ApiJson extends Format {
+    public function process()
+    {
+        $this->response->setHeader('Content-type', 'application/json');
+        $this->response->setContent(json_encode($this->createResponseBody(), JSON_PRETTY_PRINT));
 
-        /**
-         * @return \Dez\Http\Response
-         */
-        public function process() {
+        return $this->response;
+    }
 
-            $this->response->setHeader( 'Content-type', 'application/json' );
-            $response   = $this->response->getContent();
+    /**
+     * @return array|null
+     * @throws \Dez\Http\Exception
+     */
+    private function createResponseBody()
+    {
+        $response = $this->response->getContent();
+        $statusCode = $this->response->getStatusCode();
 
-            $response   = ! is_array( $response ) ? [ $response ] : $response;
+        $response = !is_array($response) ? [$response] : $response;
 
-            $statusCode = $this->response->getStatusCode();
+        $response['response-status'] = [
+            'code' => $statusCode,
+            'status' => $this->response->getStatusMessage($statusCode),
+            'memory' => $this->memoryUsage(),
+        ];
 
-            $response['http_code']      = $statusCode;
-            $response['http_status']    = $this->response->getStatusMessage( $statusCode );
+        return $response;
+    }
 
-            $response['memory_use']     = memory_get_usage( true ) / 1024 . ' kb';
+    /**
+     * @return string
+     */
+    private function memoryUsage()
+    {
+        $bytes = memory_get_usage();
 
-            $this->response->setContent( json_encode( $response, JSON_PRETTY_PRINT ) );
+        $name = 'B';
 
-            return $this->response;
+        if ($bytes > 1024) {
+            $name = 'K';
+            $bytes = $bytes / 1024;
+        } else {
+            if ($bytes > (1024 * 1024)) {
+                $name = 'M';
+                $bytes = $bytes / 1024;
+            }
         }
 
+        return "$bytes $name";
     }
+
+}
