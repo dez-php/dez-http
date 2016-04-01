@@ -7,6 +7,8 @@ use Dez\DependencyInjection\InjectableInterface;
 use Dez\Http\Response\Format\ApiJson;
 use Dez\Http\Response\Format\Html;
 use Dez\Http\Response\Format\Json;
+use Dez\Http\Response\Format\Raw;
+use Dez\Http\Response\FormatInterface;
 use Dez\Http\Response\Headers;
 
 /**
@@ -16,11 +18,34 @@ use Dez\Http\Response\Headers;
 class Response implements InjectableInterface, ResponseInterface
 {
 
+    const RESPONSE_RAW = 'raw';
+
     const RESPONSE_JSON = 'json';
 
     const RESPONSE_HTML = 'html';
 
     const RESPONSE_API_JSON = 'api_json';
+
+    const RESPONSE_CUSTOM = 'custom';
+
+    const CONTENT_HTML = 'text/html';
+
+    const CONTENT_PLAIN = 'text/plain';
+
+    const CONTENT_JSON = 'application/json';
+
+    const CONTENT_XML = 'text/xml';
+
+    /**
+     * @var array
+     */
+    protected static $classesMap = [
+        self::RESPONSE_RAW  => Raw::class,
+        self::RESPONSE_JSON  => Json::class,
+        self::RESPONSE_API_JSON  => ApiJson::class,
+        self::RESPONSE_HTML  => Html::class,
+        self::RESPONSE_CUSTOM => null,
+    ];
 
     /**
      * @var ContainerInterface
@@ -31,6 +56,11 @@ class Response implements InjectableInterface, ResponseInterface
      * @var string
      */
     protected $bodyFormat = self::RESPONSE_HTML;
+
+    /**
+     * @var null
+     */
+    protected $formatter = null;
 
     /**
      * @var int
@@ -62,6 +92,8 @@ class Response implements InjectableInterface, ResponseInterface
     {
         $this->setHeaders(new Headers());
         $this->setHeader('X-Greetings-From', 'DezByte');
+        $this->setBodyFormat(self::RESPONSE_HTML);
+
         if ($content !== null) {
             $this->setContent($content)->setStatusCode($statusCode, $statusMessage);
         }
@@ -109,6 +141,49 @@ class Response implements InjectableInterface, ResponseInterface
     }
 
     /**
+     * @param string $type
+     * @return $this
+     */
+    public function setContentType($type = self::CONTENT_HTML)
+    {
+        $this->setHeader('Content-type', $type);
+
+        return $this;
+    }
+
+    /**
+     * @return Response
+     */
+    public function setContentTypeHtml()
+    {
+        return $this->setContentType(self::CONTENT_HTML);
+    }
+
+    /**
+     * @return Response
+     */
+    public function setContentTypeJson()
+    {
+        return $this->setContentType(self::CONTENT_JSON);
+    }
+
+    /**
+     * @return Response
+     */
+    public function setContentTypeXml()
+    {
+        return $this->setContentType(self::CONTENT_XML);
+    }
+
+    /**
+     * @return Response
+     */
+    public function setContentTypePlain()
+    {
+        return $this->setContentType(self::CONTENT_PLAIN);
+    }
+
+    /**
      * @param string $url
      * @return $this
      */
@@ -144,7 +219,7 @@ class Response implements InjectableInterface, ResponseInterface
      * @param null $content
      * @return static
      */
-    public function appentContent($content)
+    public function appendContent($content)
     {
         $this->content = $this->getContent() . $content;
 
@@ -265,6 +340,67 @@ class Response implements InjectableInterface, ResponseInterface
     /**
      * @return $this
      */
+    public function sendHeaders()
+    {
+        $this->getHeaders()->send();
+
+        return $this;
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function handlerContent()
+    {
+        $reflection = new \ReflectionClass($this->formatter);
+        $formatter = $reflection->newInstanceArgs([$this]);
+
+        $formatter->process();
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBodyFormat()
+    {
+        return $this->bodyFormat;
+    }
+
+    /**
+     * @param string $bodyFormat
+     * @param null|string $customFormatter
+     * @return $this
+     * @throws Exception
+     */
+    public function setBodyFormat($bodyFormat, $customFormatter = null)
+    {
+        $this->bodyFormat = $bodyFormat;
+
+        if(! array_key_exists($bodyFormat, static::$classesMap)) {
+            throw new Exception("Bad response formatter '{$bodyFormat}' passed.");
+        }
+
+        $class = static::$classesMap[$bodyFormat];
+
+        if(null === $class && $customFormatter !== null && $bodyFormat === self::RESPONSE_CUSTOM) {
+            $class = $customFormatter;
+        }
+
+        if(! is_subclass_of($class, FormatInterface::class)) {
+            $formatterInterface = FormatInterface::class;
+            throw new Exception("Formatter must be implement of '{$formatterInterface}'");
+        }
+
+        $this->formatter = $class;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
     public function sendContent()
     {
         echo $this->getContent();
@@ -278,7 +414,6 @@ class Response implements InjectableInterface, ResponseInterface
      */
     public function sendCookies()
     {
-
         $container = $this->getDi();
         if (!$container || !($container instanceof ContainerInterface)) {
             throw new Exception('DependencyInjection require for response service');
@@ -310,60 +445,6 @@ class Response implements InjectableInterface, ResponseInterface
     public function setDi(ContainerInterface $di)
     {
         $this->di = $di;
-
-        return $this;
-    }
-
-    /**
-     * @return $this
-     */
-    public function sendHeaders()
-    {
-        $this->getHeaders()->send();
-
-        return $this;
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function handlerContent()
-    {
-
-        if ($this->getBodyFormat() === Response::RESPONSE_HTML) {
-            $formatter = new Html($this);
-        } else {
-            if ($this->getBodyFormat() === Response::RESPONSE_JSON) {
-                $formatter = new Json($this);
-            } else {
-                if ($this->getBodyFormat() === Response::RESPONSE_API_JSON) {
-                    $formatter = new ApiJson($this);
-                } else {
-                    throw new Exception('Bad setting body-format for response content');
-                }
-            }
-        }
-
-        $formatter->process();
-
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getBodyFormat()
-    {
-        return $this->bodyFormat;
-    }
-
-    /**
-     * @param string $bodyFormat
-     * @return static
-     */
-    public function setBodyFormat($bodyFormat)
-    {
-        $this->bodyFormat = $bodyFormat;
 
         return $this;
     }
