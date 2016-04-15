@@ -2,6 +2,8 @@
 
     namespace Dez\Http;
 
+    use Dez\Http\Request\File;
+
     /**
      * Class Request
      * @package Dez\Http
@@ -279,5 +281,75 @@
             return $this->getSchema() === 'https';
         }
 
+        /**
+         * @return bool
+         */
+        public function hasFiles()
+        {
+            return isset($_FILES) && count($_FILES) > 0;
+        }
+
+        /**
+         * @param null $path
+         * @return File[]
+         */
+        public function getUploadedFiles($path = null)
+        {
+            $files = [];
+
+            if($this->hasFiles()) {
+                foreach ($_FILES as $index => $file) {
+                    if(gettype($file['name']) === 'string') {
+                        $files[] = new File($file + ['key' => $index]);
+                    } else if(gettype($file['name']) === 'array') {
+
+                        $preparedFiles = $this->prepareFiles($file['name'], $file['tmp_name'], $file['type'], $file['size'], $file['error'], $index);
+                        foreach ($preparedFiles as $preparedFile) {
+                            $files[] = new File($preparedFile);
+                        }
+                    }
+                }
+
+            }
+
+            // $onlySuccessful === true && $file['error'] === UPLOAD_ERR_OK
+
+            return $files;
+        }
+
+        /**
+         * @param array $names
+         * @param array $temporaryNames
+         * @param array $types
+         * @param array $sizes
+         * @param array $errors
+         * @param null $prefix
+         * @return array
+         */
+        private function prepareFiles(array $names, array $temporaryNames, array $types, array $sizes, array $errors, $prefix = null)
+        {
+            $files = [];
+
+            foreach ($names as $index => $name) {
+                $currentPrefix = "{$prefix}.{$index}";
+
+                if(gettype($name) === 'array') {
+                    foreach ($this->prepareFiles($names[$index], $temporaryNames[$index], $types[$index], $sizes[$index], $errors[$index], $currentPrefix) as $file) {
+                        $files[] = $file;
+                    }
+                } else {
+                    $files[] = [
+                        'name' => $names[$index],
+                        'tmp_name' => $temporaryNames[$index],
+                        'type' => $types[$index],
+                        'size' => $sizes[$index],
+                        'error' => $errors[$index],
+                        'key' => $currentPrefix,
+                    ];
+                }
+            }
+
+            return $files;
+        }
 
     }
