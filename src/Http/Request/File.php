@@ -78,9 +78,12 @@ class File {
      */
     public function getRealMimeType()
     {
-        $fileInfo = finfo_open(FILEINFO_MIME);
+        $info = finfo_open(FILEINFO_MIME);
 
-        return finfo_file($fileInfo, $this->getTemporaryName());
+        $mime = finfo_file($info, $this->getTemporaryName());
+        finfo_close($info);
+
+        return $mime;
     }
 
     /**
