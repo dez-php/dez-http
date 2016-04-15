@@ -290,29 +290,38 @@
         }
 
         /**
-         * @param null $path
-         * @return File[]
+         * @param null $filterKey
+         * @return Request\File[]
          */
-        public function getUploadedFiles($path = null)
+        public function getUploadedFiles($filterKey = null)
         {
-            $files = [];
+            /** @var $temporaryFiles File[] */
+            $temporaryFiles = [];
 
             if($this->hasFiles()) {
                 foreach ($_FILES as $index => $file) {
                     if(gettype($file['name']) === 'string') {
-                        $files[] = new File($file + ['key' => $index]);
+                        $temporaryFiles[] = new File($file + ['key' => $index]);
                     } else if(gettype($file['name']) === 'array') {
-
                         $preparedFiles = $this->prepareFiles($file['name'], $file['tmp_name'], $file['type'], $file['size'], $file['error'], $index);
                         foreach ($preparedFiles as $preparedFile) {
-                            $files[] = new File($preparedFile);
+                            $temporaryFiles[] = new File($preparedFile);
                         }
                     }
-                }
-
+                } unset($file);
             }
 
-            // $onlySuccessful === true && $file['error'] === UPLOAD_ERR_OK
+            $files = [];
+
+            if(null !== $filterKey && gettype($filterKey) === 'string') {
+                foreach ($temporaryFiles as $temporaryFile) {
+                    if(strpos($temporaryFile->getKey(), $filterKey) === 0) {
+                        $files[] = $temporaryFile;
+                    }
+                }
+            } else {
+                $files = $temporaryFiles;
+            }
 
             return $files;
         }

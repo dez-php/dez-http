@@ -9,7 +9,7 @@ include_once '../vendor/autoload.php';
 
 $request = new \Dez\Http\Request();
 
-foreach ($request->getUploadedFiles() as $file) {
+foreach ($request->getUploadedFiles('user.extra') as $file) {
     echo $file->getName() . ' -> ' . $file->getKey() . ' -> size ' . $file->getSize(File::SIZE_MEGABYTES) . 'Mb '. $file->getMimeType() . '/' . $file->getRealMimeType() .' -> ' . $file->getExtension() .' <br>';
 }
 
@@ -28,8 +28,8 @@ foreach ($request->getUploadedFiles() as $file) {
     <input type="file" name="few_files[]" >
     <input type="file" name="few_files[]" >
     <hr>
-    <input type="file" name="named_files[avatar]">
-    <input type="file" name="named_files[info]">
+    <input type="file" name="user[avatar]">
+    <input type="file" name="user[info]">
     <hr>
     <input type="file" name="user[extra][avatar]">
     <hr>
