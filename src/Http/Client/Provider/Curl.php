@@ -6,6 +6,10 @@ use Dez\Http\Client\HttpRequest;
 use Dez\Http\Client\HttpRequestException;
 use Dez\Http\Client\Response;
 
+/**
+ * Class Curl
+ * @package Dez\Http\Client\Provider
+ */
 class Curl extends HttpRequest {
 
     /**
@@ -115,18 +119,15 @@ class Curl extends HttpRequest {
         return new Response($responseContent, $statusCode, $contentType);
     }
 
-    public function post(array $params = [])
-    {
-        $this->setOption(CURLOPT_POST, true);
-        $this->setOption(CURLOPT_POSTFIELDS, $params);
-
-        return $this->send(HttpRequest::METHOD_POST);
-    }
-    
+    /**
+     * @param array $params
+     * @return Response
+     * @throws HttpRequestException
+     */
     public function get(array $params = [])
     {
         $this->setOption(CURLOPT_HTTPGET, true);
-        
+
         foreach ($params as $name => $value) {
             $this->uri->setQuery($name, $value);
         }
@@ -134,6 +135,50 @@ class Curl extends HttpRequest {
         return $this->send(HttpRequest::METHOD_GET);
     }
 
+    /**
+     * @param array $params
+     * @return Response
+     * @throws HttpRequestException
+     */
+    public function post(array $params = [])
+    {
+        $this->setOption(CURLOPT_POST, true);
+        $this->setOption(CURLOPT_POSTFIELDS, $params);
+
+        return $this->send(HttpRequest::METHOD_POST);
+    }
+
+    /**
+     * @param array $params
+     * @return Response
+     * @throws HttpRequestException
+     */
+    public function put(array $params = [])
+    {
+        $this->setOption(CURLOPT_POST, true);
+        $this->setOption(CURLOPT_POSTFIELDS, $params);
+
+        return $this->send(HttpRequest::METHOD_PUT);
+    }
+
+    /**
+     * @param array $params
+     * @return Response
+     * @throws HttpRequestException
+     */
+    public function delete(array $params = [])
+    {
+        $this->setOption(CURLOPT_POST, true);
+        $this->setOption(CURLOPT_POSTFIELDS, $params);
+
+        return $this->send(HttpRequest::METHOD_DELETE);
+    }
+
+    /**
+     * @param null $filepath
+     * @return \CURLFile
+     * @throws HttpRequestException
+     */
     public static function file($filepath = null)
     {
         if(! file_exists($filepath)) {
