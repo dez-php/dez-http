@@ -12,7 +12,8 @@ include_once '../vendor/autoload.php';
 $filepath = realpath('./test.jpg');
 
 $curl = new Curl();
-$curl->uri('http://fs.local/upload/dump');
+$curl->uri('http://my.local/request-dump.php');
+$curl->setTimeout(3);
 
 $uri = $curl->getUri();
 
@@ -25,4 +26,4 @@ $response = $curl->post([
     'category_id' => 13,
 ]);
 
-var_dump($response->getJsonBody()->response, $response->getContentType(), $response->getHttpCode());
+var_dump($response->getBody(), $response->getContentType(), $response->getHttpCode());

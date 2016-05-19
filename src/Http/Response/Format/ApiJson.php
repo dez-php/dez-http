@@ -33,7 +33,7 @@ class ApiJson extends Format
 
         $response = !is_array($response) ? [$response] : $response;
 
-        $response['response-status'] = [
+        $response['response_info'] = [
             'code' => $statusCode,
             'status' => $this->response->getStatusMessage($statusCode),
             'memory' => $this->memoryUsage(),
@@ -47,21 +47,11 @@ class ApiJson extends Format
      */
     private function memoryUsage()
     {
+        $names = ['B', 'K', 'M', 'G', 'T'];
         $bytes = memory_get_usage();
+        $scale = (integer) log($bytes, 1024);
 
-        $name = 'B';
-
-        if ($bytes > 1024) {
-            $name = 'K';
-            $bytes = $bytes / 1024;
-        } else {
-            if ($bytes > (1024 * 1024)) {
-                $name = 'M';
-                $bytes = $bytes / 1024;
-            }
-        }
-
-        return "$bytes $name";
+        return round($bytes / pow(1024, $scale), 2) . $names[$scale];
     }
 
 }
