@@ -11,6 +11,9 @@ include_once '../vendor/autoload.php';
 
 $curl = new Curl();
 
-var_dump($curl->uri('http://fs.local/upload')->post([
-    'upload_type' => 'direct-link'
-]));
+$response = $curl->uri('http://fs.local/upload')->post([
+    'upload_type' => 'local',
+    'file' => Curl::file(realpath('./blank.txt'))
+]);
+
+var_dump($response->getJsonBody(), $response->getContentType(), $response->getHttpCode());

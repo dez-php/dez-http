@@ -21,7 +21,7 @@ abstract class HttpRequest
 
     const VERSION = '1.0.0';
 
-    const USER_AGENT = 'Dez Client/%s Provider/%s';
+    const USER_AGENT = 'DezHttpClient v%s Provider/%s';
 
     /**
      * @var Uri

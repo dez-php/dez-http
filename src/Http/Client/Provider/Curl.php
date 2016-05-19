@@ -4,6 +4,7 @@ namespace Dez\Http\Client\Provider;
 
 use Dez\Http\Client\HttpRequest;
 use Dez\Http\Client\HttpRequestException;
+use Dez\Http\Client\Response;
 
 class Curl extends HttpRequest {
 
@@ -46,6 +47,28 @@ class Curl extends HttpRequest {
     }
 
     /**
+     * @param integer $timeout
+     * @return $this
+     */
+    public function setTimeout($timeout)
+    {
+        $this->setOption(CURLOPT_TIMEOUT, $timeout);
+
+        return $this;
+    }
+
+    /**
+     * @param integer $timeout
+     * @return $this
+     */
+    public function setConnectTimeout($timeout)
+    {
+        $this->setOption(CURLOPT_CONNECTTIMEOUT, $timeout);
+
+        return $this;
+    }
+
+    /**
      * @param $option
      * @param $value
      * @return $this
@@ -70,33 +93,36 @@ class Curl extends HttpRequest {
 
     /**
      * @param string $method
-     * @return $this
+     * @return Response
+     * @throws HttpRequestException
      */
     public function send($method = HttpRequest::METHOD_GET)
     {
         $this->setOption(CURLOPT_CUSTOMREQUEST, $method);
         $this->setOption(CURLOPT_URL, $this->uri->full());
-        $this->setOption(CURLOPT_HTTPHEADER, "X-Request-Timestamp: ". time());
+        $this->setOption(CURLOPT_HTTPHEADER, ["X-cURL-Request: ". time()]);
 
-        return curl_exec($this->handle);
+        $responseContent = curl_exec($this->handle);
+        $responseInfo = curl_getinfo($this->handle);
+
+        if(curl_errno($this->handle) !== 0) {
+            throw new HttpRequestException("cURL failed with error: ". curl_error($this->handle));
+        }
+
+        $contentType = $responseInfo['content_type'];
+        $statusCode = $responseInfo['http_code'];
+        
+        return new Response($responseContent, $statusCode, $contentType);
     }
 
-    /**
-     * @param array $params
-     * @return Curl
-     */
     public function post(array $params = [])
     {
-        $this->setOption(CURLOPT_POSTFIELDS, $params);
         $this->setOption(CURLOPT_POST, true);
+        $this->setOption(CURLOPT_POSTFIELDS, $params);
 
         return $this->send(HttpRequest::METHOD_POST);
     }
-
-    /**
-     * @param array $params
-     * @return Curl
-     */
+    
     public function get(array $params = [])
     {
         $this->setOption(CURLOPT_HTTPGET, true);
@@ -106,6 +132,15 @@ class Curl extends HttpRequest {
         }
 
         return $this->send(HttpRequest::METHOD_GET);
+    }
+
+    public static function file($filepath = null)
+    {
+        if(! file_exists($filepath)) {
+            throw new HttpRequestException();
+        }
+
+        return curl_file_create($filepath);
     }
 
 }
