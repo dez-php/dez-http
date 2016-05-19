@@ -9,11 +9,15 @@ ini_set('display_errors', 1);
 
 include_once '../vendor/autoload.php';
 
-$curl = new Curl();
+$filepath = realpath('./test.jpg');
 
-$response = $curl->uri('http://fs.local/upload')->post([
+$curl = new Curl();
+$curl->uri('http://fs.local/upload');
+
+$response = $curl->post([
     'upload_type' => 'local',
-    'file' => Curl::file(realpath('./blank.txt'))
+    'file' => Curl::file($filepath),
+    'name' => 'rick and morty wallpaper'
 ]);
 
-var_dump($response->getJsonBody(), $response->getContentType(), $response->getHttpCode());
+var_dump($response->getJsonBody()->response, $response->getContentType(), $response->getHttpCode());

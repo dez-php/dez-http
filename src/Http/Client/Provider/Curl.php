@@ -137,7 +137,11 @@ class Curl extends HttpRequest {
     public static function file($filepath = null)
     {
         if(! file_exists($filepath)) {
-            throw new HttpRequestException();
+            throw new HttpRequestException("File could not be found");
+        }
+
+        if(! is_readable($filepath)) {
+            throw new HttpRequestException("File '{$filepath}' is not readable. Please change permissions");
         }
 
         return curl_file_create($filepath);
