@@ -32,8 +32,6 @@ class Curl extends HttpRequest {
         
         $this->setOptions([
             CURLOPT_RETURNTRANSFER  => true,
-            CURLOPT_AUTOREFERER     => true,
-            CURLOPT_FOLLOWLOCATION  => true,
             CURLOPT_MAXREDIRS       => 20,
             CURLOPT_PROTOCOLS       => CURLPROTO_HTTP | CURLPROTO_HTTPS,
             CURLOPT_USERAGENT       => sprintf(static::USER_AGENT, static::VERSION, 'cURL'),
@@ -68,6 +66,17 @@ class Curl extends HttpRequest {
     public function setConnectTimeout($timeout)
     {
         $this->setOption(CURLOPT_CONNECTTIMEOUT, $timeout);
+
+        return $this;
+    }
+
+    /**
+     * @param bool $mode
+     * @return $this
+     */
+    public function setFollowLocation($mode = true)
+    {
+        $this->setOption(CURLOPT_FOLLOWLOCATION, $mode);
 
         return $this;
     }
