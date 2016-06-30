@@ -86,4 +86,12 @@ class Response {
         return $this->contentType;
     }
 
+    /**
+     * @return bool
+     */
+    public function isRedirect()
+    {
+        return ($this->getHttpCode() == 301 || $this->getHttpCode() == 302);
+    }
+
 }
