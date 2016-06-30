@@ -12,7 +12,7 @@ include_once '../vendor/autoload.php';
 $filepath = realpath('./test.jpg');
 
 $curl = new Curl();
-$curl->uri('http://my.local/request-dump.php');
+$curl->uri('http://file-storage.local/upload/dump');
 $curl->setTimeout(3);
 
 $uri = $curl->getUri();
