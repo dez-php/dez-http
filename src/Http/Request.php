@@ -222,7 +222,7 @@
          * @return bool
          */
         public function isAjax() {
-            return strtolower($this->getServer( 'x_requested_with' )) === 'xmlhttprequest';
+            return strtolower($this->getServerHttp( 'x_requested_with' )) === 'xmlhttprequest';
         }
 
         /**
